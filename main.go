@@ -31,11 +31,8 @@ func IdxColor(idx int) color.Color {
 }
 
 const (
-	pxSize     = 640
-	imgWidth   = pxSize
-	imgHeight  = pxSize
-	boardSize  = 8
-	squareSize = pxSize / boardSize
+	pxSize    = 640
+	boardSize = 8
 )
 
 func load(filePath string) (*image.NRGBA, error) {
@@ -55,40 +52,44 @@ func load(filePath string) (*image.NRGBA, error) {
 const (
 	piecesImg = "ChessPiecesArray.png"
 	pieceSize = 60
-	// NOTE: this assumes that square size is bigger than piece size
-	piecePadding = (squareSize - pieceSize) / 2
 )
 
-func main() {
-	upLeft := image.Point{0, 0}
-	lowRight := image.Point{imgWidth, imgHeight}
-
-	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
-	pieces, err := load(piecesImg)
-	if err != nil {
-		log.Fatalf("couldn't load image %s: %v", piecesImg, err)
-	}
-
-	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-	// cyan := color.RGBA{100, 200, 200, 0xff}
+func drawBoard(img *image.RGBA) {
+	size := img.Bounds().Size()
+	width := size.X
+	height := size.Y
+	squareSize := width / boardSize
 
 	// Set color for each pixel.
-	for x := 0; x < imgWidth; x++ {
+	for x := 0; x < width; x++ {
 		xIdx := x / squareSize
 
-		for y := 0; y < imgHeight; y++ {
+		for y := 0; y < height; y++ {
 			yIdx := y / squareSize
 			sqIdx := (xIdx * boardSize) + yIdx
 
 			img.Set(x, y, IdxColor(sqIdx))
 		}
 	}
+}
+
+func main() {
+	img := image.NewRGBA(image.Rect(0, 0, pxSize, pxSize))
+	drawBoard(img)
+
+	squareSize := pxSize / boardSize
+
+	pieces, err := load(piecesImg)
+	if err != nil {
+		log.Fatalf("couldn't load image %s: %v", piecesImg, err)
+	}
+
 	pieceRect, err := pieceRect("n", "b")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	sqRect, err := notationRect("a1")
+	sqRect, err := notationRect("a1", squareSize)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -100,12 +101,12 @@ func main() {
 	png.Encode(f, img)
 }
 
-const (
-	pieces = "qkrnbp"
-	colors = "bw"
-)
-
 func pieceRect(piece, color string) (image.Rectangle, error) {
+	const (
+		pieces = "qkrnbp"
+		colors = "bw"
+	)
+
 	piece = strings.ToLower(piece)
 	if piece == "" {
 		// treat empty string as pawn
@@ -134,14 +135,14 @@ func pieceRect(piece, color string) (image.Rectangle, error) {
 	return rect, nil
 }
 
-var (
-	Files = "abcdefgh"
-	Ranks = "12345678"
-)
-
 // notationRect returns a rectangle with corresponding location on the board
 // from square notation ("a1", "d3").
-func notationRect(notation string) (image.Rectangle, error) {
+func notationRect(notation string, squareSize int) (image.Rectangle, error) {
+	const (
+		files = "abcdefgh"
+		ranks = "12345678"
+	)
+
 	if len(notation) != 2 {
 		return image.Rectangle{}, fmt.Errorf(
 			"Wrong square notation format %s, expected format \"b7\"",
@@ -154,19 +155,22 @@ func notationRect(notation string) (image.Rectangle, error) {
 	fileStr := string(notation[0])
 	rankStr := string(notation[1])
 
-	if !strings.Contains(Ranks, rankStr) || !strings.Contains(Files, fileStr) {
+	if !strings.Contains(ranks, rankStr) || !strings.Contains(files, fileStr) {
 		return image.Rectangle{}, fmt.Errorf(
 			"Wrong square notation %s, rank/file not found",
 			notation,
 		)
 	}
 
-	file := strings.Index(Files, fileStr)
+	file := strings.Index(files, fileStr)
 
 	// a1 shuold be bottom of board but because we are drawing from top left
 	// then we have to make sure that a1 corresponding to index 0, 7 (instead of 0, 0)
 	rank, _ := strconv.Atoi(rankStr)
 	rank = boardSize - rank
+
+	// NOTE: this assumes that square size is bigger than piece size
+	piecePadding := (squareSize - pieceSize) / 2
 
 	rect := image.Rect(
 		(file*squareSize)+piecePadding,
