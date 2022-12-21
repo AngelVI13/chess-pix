@@ -31,7 +31,7 @@ func IdxColor(idx int) color.Color {
 }
 
 const (
-	pxSize    = 640
+	pxSize    = 800
 	boardSize = 8
 )
 
@@ -73,6 +73,30 @@ func drawBoard(img *image.RGBA) {
 	}
 }
 
+func drawPiece(color, notation string, img *image.RGBA, squareSize int, pieces *image.NRGBA) {
+	if len(notation) < 2 || len(notation) > 3 {
+		log.Fatalf("wrong notation: %s", strconv.Quote(notation))
+	}
+
+	piece := "" // pawn
+	if len(notation) == 3 {
+		piece = string(notation[0])
+		notation = notation[1:]
+	}
+
+	pieceRect, err := pieceRect(piece, color)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sqRect, err := notationRect(notation, squareSize)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	draw.Draw(img, sqRect, pieces.SubImage(pieceRect), pieceRect.Min, draw.Over)
+}
+
 func main() {
 	img := image.NewRGBA(image.Rect(0, 0, pxSize, pxSize))
 	drawBoard(img)
@@ -84,20 +108,10 @@ func main() {
 		log.Fatalf("couldn't load image %s: %v", piecesImg, err)
 	}
 
-	pieceRect, err := pieceRect("n", "b")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	sqRect, err := notationRect("a1", squareSize)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Println(sqRect)
-	draw.Draw(img, sqRect, pieces.SubImage(pieceRect), pieceRect.Min, draw.Over)
+	drawPiece("w", "kb6", img, squareSize, pieces)
 
 	// Encode as PNG.
-	f, _ := os.Create("image.png")
+	f, _ := os.Create("image1.png")
 	png.Encode(f, img)
 }
 
