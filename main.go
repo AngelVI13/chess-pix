@@ -7,29 +7,48 @@ import (
 	"os"
 )
 
-func main() {
-	width := 200
-	height := 100
+// 32-bit bitmask to determine the color of squares (all 1's represent black)
+const ColorBitboard uint32 = 0xAA55AA55
 
+func IdxColor(idx int) color.Color {
+	// Convert index to 32-bit representation since the board pattern is the same
+	if idx >= 32 {
+		idx -= 32
+	}
+	// Compute if square is black or white based on index
+	// and its intersection to the color bitmask
+	if (ColorBitboard>>idx)&1 != 0 {
+		return color.White
+	}
+	return color.Black
+}
+
+const (
+	pxSize     = 640
+	imgWidth   = pxSize
+	imgHeight  = pxSize
+	boardSize  = 8
+	squareSize = pxSize / 8
+)
+
+func main() {
 	upLeft := image.Point{0, 0}
-	lowRight := image.Point{width, height}
+	lowRight := image.Point{imgWidth, imgHeight}
 
 	img := image.NewRGBA(image.Rectangle{upLeft, lowRight})
 
 	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-	cyan := color.RGBA{100, 200, 200, 0xff}
+	// cyan := color.RGBA{100, 200, 200, 0xff}
 
 	// Set color for each pixel.
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			switch {
-			case x < width/2 && y < height/2: // upper left quadrant
-				img.Set(x, y, cyan)
-			case x >= width/2 && y >= height/2: // lower right quadrant
-				img.Set(x, y, color.White)
-			default:
-				// Use zero value.
-			}
+	for x := 0; x < imgWidth; x++ {
+		xIdx := x / squareSize
+
+		for y := 0; y < imgHeight; y++ {
+			yIdx := y / squareSize
+			sqIdx := (xIdx * boardSize) + yIdx
+
+			img.Set(x, y, IdxColor(sqIdx))
 		}
 	}
 
