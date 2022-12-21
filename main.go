@@ -10,6 +10,8 @@ import (
 // 32-bit bitmask to determine the color of squares (all 1's represent black)
 const ColorBitboard uint32 = 0xAA55AA55
 
+var Purple = color.RGBA{0x71, 0x03, 0x8A, 0xFF}
+
 func IdxColor(idx int) color.Color {
 	// Convert index to 32-bit representation since the board pattern is the same
 	if idx >= 32 {
@@ -20,7 +22,7 @@ func IdxColor(idx int) color.Color {
 	if (ColorBitboard>>idx)&1 != 0 {
 		return color.White
 	}
-	return color.Black
+	return Purple
 }
 
 const (
