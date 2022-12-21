@@ -167,13 +167,12 @@ func notationRect(notation string) (image.Rectangle, error) {
 	// then we have to make sure that a1 corresponding to index 0, 7 (instead of 0, 0)
 	rank, _ := strconv.Atoi(rankStr)
 	rank = boardSize - rank
-	log.Println(file, rank)
 
 	rect := image.Rect(
 		(file*squareSize)+piecePadding,
 		(rank*squareSize)+piecePadding,
 		(file+1)*squareSize,
-		(rank+1)*pieceSize,
+		(rank+1)*squareSize,
 	)
 	return rect, nil
 }
