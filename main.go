@@ -98,6 +98,14 @@ func drawPiece(color, notation string, img *image.RGBA, squareSize int, pieces *
 }
 
 func main() {
+	position := []struct {
+		color string
+		loc   []string
+	}{
+		{"w", []string{"kb6", "a7"}},
+		{"b", []string{"ka8", "h2"}},
+	}
+
 	img := image.NewRGBA(image.Rect(0, 0, pxSize, pxSize))
 	drawBoard(img)
 
@@ -108,7 +116,11 @@ func main() {
 		log.Fatalf("couldn't load image %s: %v", piecesImg, err)
 	}
 
-	drawPiece("w", "kb6", img, squareSize, pieces)
+	for _, side := range position {
+		for _, p := range side.loc {
+			drawPiece(side.color, p, img, squareSize, pieces)
+		}
+	}
 
 	// Encode as PNG.
 	f, _ := os.Create("image1.png")
