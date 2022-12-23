@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/alexflint/go-arg"
 	"image"
 	"image/color"
 	"image/draw"
@@ -97,13 +98,21 @@ func drawPiece(color, notation string, img *image.RGBA, squareSize int, pieces *
 	draw.Draw(img, sqRect, pieces.SubImage(pieceRect), pieceRect.Min, draw.Over)
 }
 
+var args struct {
+	White  []string `arg:"-w,--white" help:"Positions of white pieces ex. kb1 nh7 a3"`
+	Black  []string `arg:"-b,--black" help:"Positions of black pieces ex. kb1 nh7 a3"`
+	Output string   `arg:"-o,--output" default:"image.png" help:"Output image filename"`
+}
+
 func main() {
+	arg.MustParse(&args)
+
 	position := []struct {
 		color string
 		loc   []string
 	}{
-		{"w", []string{"kb6", "a7"}},
-		{"b", []string{"ka8", "h2"}},
+		{"w", args.White},
+		{"b", args.Black},
 	}
 
 	img := image.NewRGBA(image.Rect(0, 0, pxSize, pxSize))
@@ -123,7 +132,7 @@ func main() {
 	}
 
 	// Encode as PNG.
-	f, _ := os.Create("image1.png")
+	f, _ := os.Create(args.Output)
 	png.Encode(f, img)
 }
 
